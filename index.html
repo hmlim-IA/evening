@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>마감 보고 생성기</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 18px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      background: white;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .generate-btn {
+      background: #111;
+      color: white;
+    }
+
+    .copy-btn {
+      background: #2d7ef7;
+      color: white;
+    }
+
+    .output {
+      white-space: pre-wrap;
+      background: white;
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      min-height: 120px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>마감 보고 생성기</h1>
+
+  <label>보고일</label>
+  <input type="date" id="reportDate" />
+
+  <label>경매결과</label>
+  <textarea id="auctionResult"
+placeholder="예시) 5/15(금) 한국가스공사 전단채 7일 2.53% 1900억 낙찰(총응찰 4400억) : 번호는 자동으로 들어가용"></textarea>
+
+<label>기타업무</label>
+<textarea id="otherWork"
+placeholder="예시) 한국가스공사 전단채 공고 등록"></textarea>
+
+<label>타사 입찰동향</label>
+<textarea id="bidTrend"
+placeholder="예시) 5/19(화) 부산항만공사 2년 500억, 3년 1000억(이데일리)"></textarea>
+
+
+<label>익일업무</label>
+<textarea id="nextDayWork"
+placeholder="예시) 경매 진행 및 정리"></textarea>
+
+  <label>직원동향</label>
+  <textarea id="staffStatus"></textarea>
+
+  <label>금주 경매일정</label>
+  <textarea id="thisWeekAuction" placeholder="앞에 꼭 몇월 몇주 경매일정이라고 넣으세요. 대신 <>은 자동으로 들어감"></textarea>
+
+  <label>차주 경매일정</label>
+  <textarea id="nextWeekAuction" placeholder="앞에 꼭 몇월 몇주 경매일정이라고 넣으세요. 대신 <>은 자동으로 들어감"></textarea>
+
+  <button class="generate-btn" onclick="generateText()">
+    보고 생성하기
+  </button>
+
+  <button class="copy-btn" onclick="copyText()">
+    복사하기
+  </button>
+
+  <div class="output" id="output"></div>
+
+  <script>
+    function formatDate(dateString) {
+      const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+      const date = new Date(dateString);
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const weekday = weekdays[date.getDay()];
+
+      return `${year}.${month}.${day} (${weekday})`;
+    }
+
+    function bulletFormat(text, doubleSpacing = false) {
+      if (!text.trim()) return '';
+
+      const separator = doubleSpacing ? '\n\n' : '\n';
+
+      return text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line !== '')
+        .map(line => '- ' + line)
+        .join(separator);
+    }
+
+function auctionSection(text) {
+  if (!text.trim()) return '';
+
+  const lines = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line !== '');
+
+  const title = lines[0];
+  const contents = lines.slice(1);
+
+  let result = '<' + title + '>';
+
+  if (contents.length > 0) {
+    const numbered = contents
+      .map((line, index) => (index + 1) + ') ' + line)
+      .join('\n');
+
+    result += '\n' + numbered;
+  }
+
+  return result;
+}
+
+    function generateText() {
+      const reportDate = document.getElementById('reportDate').value;
+      const auctionResult = document.getElementById('auctionResult').value;
+      const otherWork = document.getElementById('otherWork').value;
+      const bidTrend = document.getElementById('bidTrend').value;
+      const nextDayWork = document.getElementById('nextDayWork').value;
+      const staffStatus = document.getElementById('staffStatus').value;
+      const thisWeekAuction = document.getElementById('thisWeekAuction').value;
+      const nextWeekAuction = document.getElementById('nextWeekAuction').value;
+
+      let result = '';
+
+      result += formatDate(reportDate) + '\n\n';
+
+      result += '1. 주요업무\n';
+      result += '<경매결과>\n';
+const auctionFormatted = auctionResult
+  .split('\n')
+  .map(line => line.trim())
+  .filter(line => line !== '')
+  .map((line, index) => (index + 1) + ') ' + line)
+  .join('\n');
+
+result += auctionFormatted + '\n\n';
+
+      const otherFormatted = bulletFormat(otherWork, true);
+
+      if (otherFormatted) {
+        result += otherFormatted + '\n\n';
+      }
+
+      result += '2. 타사 입찰동향\n';
+      result += bidTrend.trim() + '\n\n';
+
+      result += '3. 익일업무\n';
+      result += bulletFormat(nextDayWork) + '\n';
+
+      if (staffStatus.trim()) {
+        result += '\n4. 직원동향\n';
+        result += staffStatus.trim() + '\n';
+      }
+
+      const thisWeekText = auctionSection(thisWeekAuction);
+
+      if (thisWeekText) {
+        result += '\n' + thisWeekText + '\n';
+      }
+
+      const nextWeekText = auctionSection(nextWeekAuction);
+
+      if (nextWeekText) {
+        result += '\n' + nextWeekText + '\n';
+      }
+
+      document.getElementById('output').innerText = result.trim();
+    }
+
+    function copyText() {
+      const text = document.getElementById('output').innerText;
+
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          alert('복사 완료');
+        })
+        .catch(() => {
+          alert('복사 실패');
+        });
+    }
+
+    window.onload = function () {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('reportDate').value = today;
+    };
+  </script>
+</body>
+</html>
