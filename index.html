@@ -1,21 +1,21 @@
 <!DOCTYPE html>
+
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>마감 보고 생성기</title>
 
   <style>
     body {
       font-family: sans-serif;
-      padding: 20px;
       background: #f5f5f5;
+      padding: 20px;
       max-width: 700px;
       margin: 0 auto;
     }
 
     h1 {
-      font-size: 24px;
       margin-bottom: 20px;
     }
 
@@ -73,38 +73,41 @@
       min-height: 120px;
     }
   </style>
+
 </head>
 
 <body>
+
   <h1>마감 보고 생성기</h1>
 
-  <label>보고일</label>
-  <input type="date" id="reportDate" />
+<label>보고일</label> <input type="date" id="reportDate">
 
-  <label>경매결과</label>
-  <textarea id="auctionResult"
-placeholder="예시) 5/15(금) 한국가스공사 전단채 7일 2.53% 1900억 낙찰(총응찰 4400억) : 번호는 자동으로 들어가용"></textarea>
+<label>경매결과</label>
+
+  <textarea id="auctionResult" placeholder="예시) 5/15(금) 한국가스공사 전단채 7일 2.53% 1900억 낙찰(총응찰 4400억) : 번호는 자동으로 들어가요!"></textarea>
 
 <label>기타업무</label>
-<textarea id="otherWork"
-placeholder="예시) 한국가스공사 전단채 공고 등록"></textarea>
+
+  <textarea id="otherWork" placeholder="예시) 한국가스공사 전단채 공고 등록"></textarea>
 
 <label>타사 입찰동향</label>
-<textarea id="bidTrend"
-placeholder="예시) 5/19(화) 부산항만공사 2년 500억, 3년 1000억(이데일리)"></textarea>
 
+  <textarea id="bidTrend" placeholder="예시) 5/19(화) 부산항만공사 2년 500억, 3년 1000억(이데일리)"></textarea>
 
 <label>익일업무</label>
-<textarea id="nextDayWork"
-placeholder="예시) 경매 진행 및 정리"></textarea>
 
-  <label>직원동향</label>
-  <textarea id="staffStatus"></textarea>
+  <textarea id="nextDayWork" placeholder="예시) 경매 진행 및 정리"></textarea>
 
-  <label>금주 경매일정</label>
+<label>직원동향</label>
+
+  <textarea id="staffStatus" placeholder="임희만 팀장 휴가(5/22, 연차)"></textarea>
+
+<label>금주 경매일정</label>
+
   <textarea id="thisWeekAuction" placeholder="앞에 꼭 몇월 몇주 경매일정이라고 넣으세요. 대신 <>은 자동으로 들어감"></textarea>
 
-  <label>차주 경매일정</label>
+<label>차주 경매일정</label>
+
   <textarea id="nextWeekAuction" placeholder="앞에 꼭 몇월 몇주 경매일정이라고 넣으세요. 대신 <>은 자동으로 들어감"></textarea>
 
   <button class="generate-btn" onclick="generateText()">
@@ -118,128 +121,243 @@ placeholder="예시) 경매 진행 및 정리"></textarea>
   <div class="output" id="output"></div>
 
   <script>
+
     function formatDate(dateString) {
-      const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-      const date = new Date(dateString);
 
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const weekday = weekdays[date.getDay()];
+      var weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
-      return `${year}.${month}.${day} (${weekday})`;
+      var date = new Date(dateString);
+
+      var year = date.getFullYear();
+      var month = String(date.getMonth() + 1).padStart(2, '0');
+      var day = String(date.getDate()).padStart(2, '0');
+
+      var weekday = weekdays[date.getDay()];
+
+      return year + '.' + month + '.' + day + ' (' + weekday + ')';
     }
 
-    function bulletFormat(text, doubleSpacing = false) {
-      if (!text.trim()) return '';
+    function bulletFormat(text, doubleSpacing) {
 
-      const separator = doubleSpacing ? '\n\n' : '\n';
+      if (!text || text.trim() === '') {
+        return '';
+      }
 
-      return text
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line !== '')
-        .map(line => '- ' + line)
-        .join(separator);
+      var lines = text.split('\n');
+
+      var result = '';
+
+      for (var i = 0; i < lines.length; i++) {
+
+        var line = lines[i].trim();
+
+        if (line !== '') {
+
+          if (result !== '') {
+
+            if (doubleSpacing) {
+              result += '\n\n';
+            } else {
+              result += '\n';
+            }
+
+          }
+
+          result += '- ' + line;
+        }
+      }
+
+      return result;
     }
 
-function auctionSection(text) {
-  if (!text.trim()) return '';
+    function auctionScheduleFormat(text) {
 
-  const lines = text
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line !== '');
+      if (!text || text.trim() === '') {
+        return '';
+      }
 
-  const title = lines[0];
-  const contents = lines.slice(1);
+      var lines = text.split('\n');
 
-  let result = '<' + title + '>';
+      var title = lines[0].trim();
 
-  if (contents.length > 0) {
-    const numbered = contents
-      .map((line, index) => (index + 1) + ') ' + line)
-      .join('\n');
+      var result = '<' + title + '>';
 
-    result += '\n' + numbered;
-  }
+      var number = 1;
 
-  return result;
-}
+      for (var i = 1; i < lines.length; i++) {
+
+        var line = lines[i].trim();
+
+        if (line !== '') {
+
+          result += '\n' + number + ') ' + line;
+
+          number++;
+        }
+      }
+
+      return result;
+    }
+
+    function auctionResultFormat(text) {
+
+      if (!text || text.trim() === '') {
+        return '';
+      }
+
+      var lines = text.split('\n');
+
+      var result = '';
+
+      var number = 1;
+
+      for (var i = 0; i < lines.length; i++) {
+
+        var line = lines[i].trim();
+
+        if (line !== '') {
+
+          if (result !== '') {
+            result += '\n';
+          }
+
+          if (
+            line.indexOf('(상세)') === 0 ||
+            line.indexOf('누적수익') !== -1
+          ) {
+
+            result += line;
+
+          } else {
+
+            result += number + ') ' + line;
+
+            number++;
+          }
+        }
+      }
+
+      return result;
+    }
 
     function generateText() {
-      const reportDate = document.getElementById('reportDate').value;
-      const auctionResult = document.getElementById('auctionResult').value;
-      const otherWork = document.getElementById('otherWork').value;
-      const bidTrend = document.getElementById('bidTrend').value;
-      const nextDayWork = document.getElementById('nextDayWork').value;
-      const staffStatus = document.getElementById('staffStatus').value;
-      const thisWeekAuction = document.getElementById('thisWeekAuction').value;
-      const nextWeekAuction = document.getElementById('nextWeekAuction').value;
 
-      let result = '';
+      var reportDate = document.getElementById('reportDate').value;
 
-      result += formatDate(reportDate) + '\n\n';
+      var auctionResult = document.getElementById('auctionResult').value;
 
-      result += '1. 주요업무\n';
-      result += '<경매결과>\n';
-const auctionFormatted = auctionResult
-  .split('\n')
-  .map(line => line.trim())
-  .filter(line => line !== '')
-  .map((line, index) => (index + 1) + ') ' + line)
-  .join('\n');
+      var otherWork = document.getElementById('otherWork').value;
 
-result += auctionFormatted + '\n\n';
+      var bidTrend = document.getElementById('bidTrend').value;
 
-      const otherFormatted = bulletFormat(otherWork, true);
+      var nextDayWork = document.getElementById('nextDayWork').value;
 
-      if (otherFormatted) {
-        result += otherFormatted + '\n\n';
+      var staffStatus = document.getElementById('staffStatus').value;
+
+      var thisWeekAuction = document.getElementById('thisWeekAuction').value;
+
+      var nextWeekAuction = document.getElementById('nextWeekAuction').value;
+
+      var result = '';
+
+      result += formatDate(reportDate);
+
+      result += '\n\n';
+
+      result += '1. 주요업무';
+
+      result += '\n';
+
+      result += '<경매결과>';
+
+      result += '\n';
+
+      result += auctionResultFormat(auctionResult);
+
+      result += '\n\n';
+
+      var otherText = bulletFormat(otherWork, true);
+
+      if (otherText !== '') {
+
+        result += otherText;
+
+        result += '\n\n';
       }
 
-      result += '2. 타사 입찰동향\n';
-      result += bidTrend.trim() + '\n\n';
+      result += '2. 타사 입찰동향';
 
-      result += '3. 익일업무\n';
-      result += bulletFormat(nextDayWork) + '\n';
+      result += '\n';
 
-      if (staffStatus.trim()) {
-        result += '\n4. 직원동향\n';
-        result += staffStatus.trim() + '\n';
+      result += bidTrend.trim();
+
+      result += '\n\n';
+
+      result += '3. 익일업무';
+
+      result += '\n';
+
+      result += bulletFormat(nextDayWork, false);
+
+      result += '\n';
+
+      if (staffStatus.trim() !== '') {
+
+        result += '\n4. 직원동향';
+
+        result += '\n';
+
+        result += staffStatus.trim();
+
+        result += '\n';
       }
 
-      const thisWeekText = auctionSection(thisWeekAuction);
+      var thisWeekText = auctionScheduleFormat(thisWeekAuction);
 
-      if (thisWeekText) {
-        result += '\n' + thisWeekText + '\n';
+      if (thisWeekText !== '') {
+
+        result += '\n';
+
+        result += thisWeekText;
+
+        result += '\n';
       }
 
-      const nextWeekText = auctionSection(nextWeekAuction);
+      var nextWeekText = auctionScheduleFormat(nextWeekAuction);
 
-      if (nextWeekText) {
-        result += '\n' + nextWeekText + '\n';
+      if (nextWeekText !== '') {
+
+        result += '\n';
+
+        result += nextWeekText;
+
+        result += '\n';
       }
 
-      document.getElementById('output').innerText = result.trim();
+      document.getElementById('output').innerText = result;
     }
 
     function copyText() {
-      const text = document.getElementById('output').innerText;
+
+      var text = document.getElementById('output').innerText;
 
       navigator.clipboard.writeText(text)
-        .then(() => {
+        .then(function () {
           alert('복사 완료');
         })
-        .catch(() => {
+        .catch(function () {
           alert('복사 실패');
         });
     }
 
     window.onload = function () {
-      const today = new Date().toISOString().split('T')[0];
+
+      var today = new Date().toISOString().split('T')[0];
+
       document.getElementById('reportDate').value = today;
     };
+
   </script>
+
 </body>
 </html>
